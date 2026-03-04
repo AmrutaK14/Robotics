@@ -1,0 +1,74 @@
+import pygame
+import math
+import time
+
+pygame.init()
+
+WIDTH = 900
+HEIGHT = 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Internal Compass - Proportional Control")
+
+clock = pygame.time.Clock()
+
+# Robot state
+robot_x = WIDTH // 2
+robot_y = HEIGHT // 2
+robot_theta = 0.0  # orientation in radians
+
+# Fixed target
+target_x = 700
+target_y = 200
+
+Kp = 2  # Proportional gain
+
+running = True
+
+while running:
+    dt = clock.tick(60) / 1000.0  # delta time in seconds
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # === CONTROL LOGIC ===
+
+    # Desired heading
+    desired_theta = math.atan2(target_y - robot_y,
+                               target_x - robot_x)
+
+    # Angle error
+    error = desired_theta - robot_theta
+
+    # Normalize angle to [-pi, pi]
+    error = math.atan2(math.sin(error), math.cos(error))
+
+    # Proportional controller
+    angular_velocity = Kp * error
+
+    # Update robot orientation
+    robot_theta += angular_velocity * dt
+
+    # === DRAWING ===
+    screen.fill((30, 30, 30))
+
+    # Draw target
+    pygame.draw.circle(screen, (255, 0, 0),
+                       (target_x, target_y), 10)
+
+    # Draw robot body
+    pygame.draw.circle(screen, (0, 255, 0),
+                       (int(robot_x), int(robot_y)), 25)
+
+    # Draw orientation line
+    line_length = 40
+    end_x = robot_x + line_length * math.cos(robot_theta)
+    end_y = robot_y + line_length * math.sin(robot_theta)
+
+    pygame.draw.line(screen, (255, 255, 255),
+                     (robot_x, robot_y),
+                     (end_x, end_y), 3)
+
+    pygame.display.flip()
+
+pygame.quit()
